@@ -67,7 +67,7 @@ class HotelCrawler:
         success_num = 0
         with sync_playwright() as p:
             logger.info(f"初始化浏览器")
-            browser = p.chromium.launch(headless=False)
+            browser = p.chromium.launch(headless=True)
             for url in hotel_url_list:
                 page = browser.new_page()
                 try:

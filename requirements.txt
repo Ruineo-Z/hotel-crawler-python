@@ -3,3 +3,4 @@ apscheduler~=3.11.0
 loguru~=0.7.3
 playwright~=1.52.0
 beautifulsoup4~=4.13.4
+pytz~=2025.2

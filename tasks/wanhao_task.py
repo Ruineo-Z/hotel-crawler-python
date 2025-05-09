@@ -11,7 +11,9 @@ logger = get_logger("tasks")
 
 def fetch_lowest_price(hotel):
     client = WHCrawler()
+    logger.debug(f"开始获取用于 {hotel} 的Cookie")
     client.get_hotel_cookie()
+    logger.debug(f"用于 {hotel} 的Cookie获取完成")
     try:
         hotel_rooms_lowest_price = client.batch_get_room_price(hotel_property_id=hotel)
         logger.success(f"完成 万豪集团 {hotel} 的最低房价")

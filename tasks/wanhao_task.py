@@ -1,9 +1,10 @@
 import json
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from crawler.wanhao_hotel import WHCrawler
+from crawler.wanhao_crawler import WHCrawler
 from logger import get_logger
 from config import settings
+import tools
 
 logger = get_logger("tasks")
 
@@ -23,6 +24,7 @@ def fetch_lowest_price(hotel):
 def wanhao_task():
     all_hotel_rooms_lowest_price = {}
 
+    # 并发获取万豪集团房价数据
     hotel_list = settings.WH_HOTEL_LIST
     worker_num = len(hotel_list)
     with ThreadPoolExecutor(max_workers=worker_num) as executor:
@@ -32,6 +34,9 @@ def wanhao_task():
             hotel, price = future.result()
             if price is not None:
                 all_hotel_rooms_lowest_price[hotel] = price
+
+    # 调用接口上传数据
+    tools.update_hotel_data(all_hotel_rooms_lowest_price, "万豪")
 
     return all_hotel_rooms_lowest_price
 

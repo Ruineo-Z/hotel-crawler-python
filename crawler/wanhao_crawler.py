@@ -16,7 +16,6 @@ logger = get_logger("wanhao-crawler")
 class WHCrawler:
     def __init__(self, date_duration: int = 60):
         self.room_list_xpath = '//*[@id="main-content"]/div/div[6]/div/div[3]/section'
-        self.database_url = "https://eoo14fnitgkpcxu.m.pipedream.net"
         self.date_duration = date_duration
 
         self.cookie_url = "https://www.marriott.com.cn/search/default.mi"

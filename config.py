@@ -6,6 +6,9 @@ from dotenv import load_dotenv
 
 class Settings(BaseSettings):
     load_dotenv()
+    # 数据库接口地址
+    DATABASE_URL: str = "https://eoo14fnitgkpcxu.m.pipedream.net"
+
     # User-Agent 配置
     USER_AGENTS: List[str] = [
         # Windows 10 + Chrome

@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from crawler.wanhao_crawler import WHCrawler
 from logger import get_logger
 from config import settings
-import tools
+from tasks import tools
 
 logger = get_logger("tasks")
 

@@ -12,4 +12,4 @@ pip install playwright
 playwright install
 
 # 运行定时任务脚本
-python3 schedule.py
+python3 main.py

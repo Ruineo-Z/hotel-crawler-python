@@ -6,7 +6,7 @@ from logger import get_logger
 from config import settings
 import tools
 
-logger = get_logger("tasks")
+logger = get_logger("wanhao-tasks")
 
 
 def fetch_lowest_price(hotel):

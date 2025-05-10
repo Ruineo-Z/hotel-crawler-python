@@ -1,4 +1,5 @@
 import random
+import time
 
 import requests
 
@@ -10,10 +11,10 @@ logger = get_logger("kaiyue-crawler")
 
 
 class KYCrawler:
-    def __init__(self, hotel_id: str):
+    def __init__(self, hotel_id: str, x_kpsdk_ct: str):
         self.hotel_base_url = "https://www.hyatt.com/zh-CN/shop/service/rooms/roomrates"
         self.hotel_id = hotel_id
-        self.cookie = ""
+        self.cookie = f"tkrm_alpekz_s1.3={x_kpsdk_ct}"
         self.set_cookie = ""
 
     def refresh_cookie(self, response_headers):
@@ -48,14 +49,16 @@ class KYCrawler:
         while retry_num < 3:
             try:
                 r = requests.get(url, params=params, headers=headers)
+                logger.debug(f"调用凯悦 {self.hotel_id} 房间信息接口结果: {r.status_code}")
                 r.raise_for_status()
-                logger.debug("")
                 room_info = r.json()["roomRates"]
                 self.refresh_cookie(r.headers)
-                logger.debug(f"调用凯悦 {self.hotel_id} 房间信息接口结果: {r.status_code}")
                 return room_info
             except Exception as e:
-                logger.error(f"获取 {self.hotel_id} {date} 的房间信息失败, Error: {e}")
+                logger.warning(
+                    f"获取 {self.hotel_id} {date} 的房间信息失败, 延时 5s, 开始第 {retry_num + 1}次重试 Error: {e}")
+                time.sleep(5)
+                retry_num += 1
         return None
 
     def get_lowest_room_price(self, all_room_info, date):
@@ -85,12 +88,4 @@ class KYCrawler:
                 }
             )
 
-        return {
-            "all_room_lowest_price": all_room_lowest_price,
-            "cookie": self.cookie
-        }
-
-
-if __name__ == "__main__":
-    client = KYCrawler()
-    client.get_hotel_cookie()
+        return all_room_lowest_price

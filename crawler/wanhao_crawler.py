@@ -7,6 +7,7 @@ from playwright.sync_api import sync_playwright
 import requests
 import pytz
 
+import tools
 from logger import get_logger
 from config import settings
 
@@ -14,11 +15,11 @@ logger = get_logger("wanhao-crawler")
 
 
 class WHCrawler:
-    def __init__(self, date_duration: int = 60):
+    def __init__(self):
         self.room_list_xpath = '//*[@id="main-content"]/div/div[6]/div/div[3]/section'
-        self.date_duration = date_duration
 
-        self.cookie_url = "https://www.marriott.com.cn/search/default.mi"
+        self.user_agent = random.choice(settings.USER_AGENTS)
+        self.cookie_url = "https://www.marriott.com.cn/hotels/ctumc-chengdu-marriott-hotel-financial-centre/overview/"
         self.price_url = "https://www.marriott.com.cn/mi/query/PhoenixBookSearchProductsByProperty"
         self.cookie = ""
         self.rate_request_types_list = [
@@ -52,7 +53,7 @@ class WHCrawler:
         with sync_playwright() as p:
             browser = p.chromium.launch(
                 headless=True,
-                args=[f'--user-agent={random.choice(settings.USER_AGENTS)}']
+                args=[f'--user-agent={self.user_agent}']
             )
             context = browser.new_context()
             page = context.new_page()
@@ -68,7 +69,7 @@ class WHCrawler:
 
     def batch_get_room_price(self, hotel_property_id: str = "CTUBR"):
         """搜索指定酒店的房价"""
-        date_list = self.get_date_list()
+        date_list = tools.get_date_list()
         all_date_lowest_room_price = []
 
         base_body = {
@@ -127,18 +128,21 @@ class WHCrawler:
             base_body["variables"]["search"]["options"]["startDate"] = start_date
             base_body["variables"]["search"]["options"]["endDate"] = end_date
 
+            headers = {
+                "cookie": self.cookie,
+                "graphql-force-safelisting": settings.GRAPHQL_FORCE_SAFELISTING,
+                "graphql-operation-name": settings.GRAPHQL_OPERATION_NAME,
+                "graphql-operation-signature": settings.GRAPHQL_OPERATION_SIGNATURE,
+                "graphql-require-safelisting": settings.GRAPHQL_REQUIRE_SAFELISTING,
+                "User-Agent": self.user_agent,
+                "Accept-language": "zh-CN",
+                "Accept-encoding": "gzip, deflate, br, zstd"
+            }
+
             room_data_list = []
+
             for rate_request_types in self.rate_request_types_list:
-                headers = {
-                    "cookie": self.cookie,
-                    "graphql-force-safelisting": settings.GRAPHQL_FORCE_SAFELISTING,
-                    "graphql-operation-name": settings.GRAPHQL_OPERATION_NAME,
-                    "graphql-operation-signature": settings.GRAPHQL_OPERATION_SIGNATURE,
-                    "graphql-require-safelisting": settings.GRAPHQL_REQUIRE_SAFELISTING,
-                    "User-Agent": random.choice(settings.USER_AGENTS),
-                    "Accept-language": "zh-CN",
-                    "Accept-encoding": "gzip, deflate, br, zstd"
-                }
+
 
                 base_body["variables"]["search"]["options"]["rateRequestTypes"] = rate_request_types
 
@@ -154,22 +158,6 @@ class WHCrawler:
             logger.debug(f"万豪集团 {hotel_property_id} {date} 最低房价获取成功")
 
         return all_date_lowest_room_price
-
-    def get_date_list(self):
-        """获取日期"""
-        date_list = []
-        timezone = pytz.timezone("Asia/Shanghai")
-        now = datetime.now(tz=timezone)
-        for i in range(self.date_duration):
-            start_date = (now + timedelta(days=i)).strftime("%Y-%m-%d")
-            end_date = (now + timedelta(days=i + 1)).strftime("%Y-%m-%d")
-            date_list.append(
-                {
-                    "start_date": start_date,
-                    "end_date": end_date
-                }
-            )
-        return date_list
 
     def get_room_price(self, request_body, request_headers, date, hotel_id):
         retry_num = 0
@@ -187,7 +175,7 @@ class WHCrawler:
                 retry_num += 1
         if retry_num == 3:
             logger.error(f"重试3次，获取 {hotel_id} {date}房价失败")
-            return []
+        return []
 
     @staticmethod
     def get_lowest_room_price(room_data_list: List[dict]):

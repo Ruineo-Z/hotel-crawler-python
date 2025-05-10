@@ -7,7 +7,7 @@ from dotenv import load_dotenv
 class Settings(BaseSettings):
     load_dotenv()
     # 数据库接口地址
-    DATABASE_URL: str = "https://eoo14fnitgkpcxu.m.pipedream.net"
+    DATABASE_URL: str = "http://craneman.cn/api/hotel/data/loadPrice"
 
     # User-Agent 配置
     USER_AGENTS: List[str] = [
@@ -61,6 +61,14 @@ class Settings(BaseSettings):
     GRAPHQL_OPERATION_SIGNATURE: str = "a1079a703a2d21d82c0c65e4337271c3029c69028c6189830f30882170075756"
     GRAPHQL_OPERATION_NAME: str = "PhoenixBookSearchProductsByProperty"
     GRAPHQL_REQUIRE_SAFELISTING: str = "true"
+
+    # 凯悦酒店数据爬虫参数
+    KY_HOTEL_LIST: List[str] = [
+        "ctugh",  # 成都群光君悦酒店
+        "ctuub",  # 琅珀·凯悦 成都琅珀酒店
+        "ctuzc",  # 成都象南里凯悦嘉轩酒店
+        "ctuxc",  # 成都象南里凯悦嘉寓酒店
+    ]
 
 
 settings = Settings()

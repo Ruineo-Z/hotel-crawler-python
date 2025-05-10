@@ -4,7 +4,7 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from crawler.wanhao_crawler import WHCrawler
 from logger import get_logger
 from config import settings
-from tasks import tools
+import tools
 
 logger = get_logger("tasks")
 
@@ -45,6 +45,5 @@ def wanhao_task():
 
 if __name__ == '__main__':
     data = wanhao_task()
-    print(data)
     with open("../test.json", "w", encoding="utf-8") as f:
         json.dump(data, f, ensure_ascii=False, indent=4)

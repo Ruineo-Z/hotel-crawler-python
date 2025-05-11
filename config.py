@@ -41,7 +41,7 @@ class Settings(BaseSettings):
         "ctuzc",  # 成都象南里凯悦嘉轩酒店
         "ctuxc",  # 成都象南里凯悦嘉寓酒店
     ]
-    KAIYUE_COOKIE: str = os.getenv("KAIYUE_COOKIE")
+    KAIYUE_COOKIE: str = os.getenv("KAIYUE_COOKIE", "")
 
 
 

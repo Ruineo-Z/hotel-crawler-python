@@ -1,0 +1,10 @@
+services:
+  hotel_crawler:
+    build:
+      context: .  # 当前目录作为构建上下文
+      dockerfile: Dockerfile  # 使用指定的 Dockerfile 文件
+    mem_limit: 1g  # 限制容器最大内存为 1GB
+    cpus: 1.0  # 限制容器最大使用 1 个 CPU 核心
+    container_name: hotel_crawler_container
+    image: hotel_crawler_image
+    restart: always

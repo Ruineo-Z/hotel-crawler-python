@@ -26,6 +26,7 @@ def fetch_lowest_price(hotel):
     """执行万豪单个酒店的最低房价获取任务"""
     client = WHCrawler()
     client.cookie = os.getenv("WANHAO_COOKIE", "")
+    print(client.cookie)
     try:
         hotel_rooms_lowest_price = client.batch_get_room_price(hotel_property_id=hotel)
         logger.success(f"完成 万豪集团 {hotel} 的最低房价")
@@ -52,7 +53,7 @@ def wanhao_task():
                 all_hotel_rooms_lowest_price[hotel] = price
 
     # 调用接口上传数据
-    # tools.update_hotel_data(all_hotel_rooms_lowest_price, "万豪")
+    tools.update_hotel_data(all_hotel_rooms_lowest_price, "万豪")
 
     logger.info(f"结束执行 万豪 最低房价任务")
     return all_hotel_rooms_lowest_price

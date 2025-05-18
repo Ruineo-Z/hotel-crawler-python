@@ -161,7 +161,7 @@ class WHCrawler:
         retry_num = 0
         while retry_num < 3:
             try:
-                r = requests.post(self.price_url, headers=request_headers, json=request_body)
+                r = requests.post(self.price_url, headers=request_headers, json=request_body, timeout=5)
                 r.raise_for_status()
                 logger.debug(f"调用 {hotel_id} 酒店房价接口结果: {r.status_code}")
                 room_data_list = r.json()["data"]["searchProductsByProperty"]["edges"]

@@ -142,8 +142,6 @@ class WHCrawler:
             room_data_list = []
 
             for rate_request_types in self.rate_request_types_list:
-
-
                 base_body["variables"]["search"]["options"]["rateRequestTypes"] = rate_request_types
 
                 room_data_list.extend(self.get_room_price(base_body, headers, date, hotel_property_id))

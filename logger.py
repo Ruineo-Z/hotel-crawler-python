@@ -30,7 +30,7 @@ logger.add(
 logger.add(
     sink=sys.stderr,
     format="{time:YYYY-MM-DD HH:mm:ss} | <level>{level: <8}</level> | <cyan>{name}</cyan>:<cyan>{function}</cyan>:<cyan>{line}</cyan> - <level>{message}</level>",
-    level="INFO",
+    level="DEBUG",
     colorize=True,  # 彩色输出
     diagnose=True,  # 启用诊断信息
 )

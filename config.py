@@ -28,6 +28,9 @@ class Settings(BaseSettings):
         "CTURZ",  # 成都富丽思卡尔顿酒店
         "CTUWH",  # 成都W酒店
         "CTUUC",  # 成都春熙路福朋喜来登酒店
+        "CTULS",  # 成都天府丽都喜来登饭店
+        "CTUBR",  # 成都首座万丽酒店
+        "CTUPH",  # 成都高新会展中心福朋喜来登酒店
     ]
     GRAPHQL_FORCE_SAFELISTING: str = "true"
     GRAPHQL_OPERATION_SIGNATURE: str = "a1079a703a2d21d82c0c65e4337271c3029c69028c6189830f30882170075756"
@@ -42,7 +45,6 @@ class Settings(BaseSettings):
         "ctuxc",  # 成都象南里凯悦嘉寓酒店
     ]
     KAIYUE_COOKIE: str = os.getenv("KAIYUE_COOKIE", "")
-
 
 
 settings = Settings()

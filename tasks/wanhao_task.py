@@ -13,9 +13,9 @@ logger = get_logger("wanhao-tasks")
 def get_cookie():
     """用于定时更新 万豪集团 Cookie 的方法，将Cookie保存再环境变量中"""
     client = WHCrawler()
-    logger.debug(f"开始获取用于 万豪 的Cookie")
+    logger.info(f"开始获取用于 万豪 的Cookie")
     client.get_hotel_cookie()
-    logger.debug(f"用于 万豪 的Cookie获取完成")
+    logger.info(f"用于 万豪 的Cookie获取完成")
 
     cookie = client.cookie
 
@@ -53,7 +53,7 @@ def wanhao_task():
                 all_hotel_rooms_lowest_price[hotel] = price
 
     # 调用接口上传数据
-    tools.update_hotel_data(all_hotel_rooms_lowest_price, "万豪")
+    # tools.update_hotel_data(all_hotel_rooms_lowest_price, "万豪")
 
     logger.info(f"结束执行 万豪 最低房价任务")
     return all_hotel_rooms_lowest_price

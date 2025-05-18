@@ -53,7 +53,7 @@ def wanhao_task():
                 all_hotel_rooms_lowest_price[hotel] = price
 
     # 调用接口上传数据
-    # tools.update_hotel_data(all_hotel_rooms_lowest_price, "万豪")
+    tools.update_hotel_data(all_hotel_rooms_lowest_price, "万豪")
 
     logger.info(f"结束执行 万豪 最低房价任务")
     return all_hotel_rooms_lowest_price

@@ -14,7 +14,7 @@ scheduler = BlockingScheduler(
 )
 
 # 每小时的第 0 分钟和第 30 分钟各执行一次（即每半小时）
-scheduler.add_job(wanhao_task.wanhao_task, 'cron', minute='53,13', id='wanhao_price_job')
+scheduler.add_job(wanhao_task.wanhao_task, 'cron', minute="0, 30", id='wanhao_price_job')
 scheduler.add_job(wanhao_task.get_cookie, 'cron', hour=23, minute=59, id='wanhao_cookie_job', timezone='Asia/Shanghai')
 
 # 启动调度器

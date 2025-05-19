@@ -1,5 +1,6 @@
 import os
 import json
+import signal
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 from crawler.wanhao_crawler import WHCrawler
@@ -38,6 +39,15 @@ def fetch_lowest_price(hotel):
 
 def wanhao_task():
     """并发获取万豪酒店的最低房价任务"""
+
+    def timeout_handler(signum, frame):
+        logger.error("万豪任务执行超过25分钟，强制终止")
+        raise TimeoutError("万豪 任务超时")
+    
+    # 设置25分钟超时
+    signal.signal(signal.SIGALRM, timeout_handler)
+    signal.alarm(25 * 60)
+
     logger.info(f"开始执行 万豪 最低房价任务")
     all_hotel_rooms_lowest_price = {}
 

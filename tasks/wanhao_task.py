@@ -48,25 +48,28 @@ def wanhao_task():
     signal.signal(signal.SIGALRM, timeout_handler)
     signal.alarm(25 * 60)
 
-    logger.info(f"开始执行 万豪 最低房价任务")
-    all_hotel_rooms_lowest_price = {}
+    try:
+        logger.info(f"开始执行 万豪 最低房价任务")
+        all_hotel_rooms_lowest_price = {}
 
-    # 并发获取万豪集团房价数据
-    hotel_list = settings.WH_HOTEL_LIST
-    worker_num = len(hotel_list)
-    with ThreadPoolExecutor(max_workers=worker_num) as executor:
-        future_to_hotel = {executor.submit(fetch_lowest_price, hotel): hotel for hotel in hotel_list}
+        # 并发获取万豪集团房价数据
+        hotel_list = settings.WH_HOTEL_LIST
+        worker_num = len(hotel_list)
+        with ThreadPoolExecutor(max_workers=worker_num) as executor:
+            future_to_hotel = {executor.submit(fetch_lowest_price, hotel): hotel for hotel in hotel_list}
 
-        for future in as_completed(future_to_hotel):
-            hotel, price = future.result()
-            if price is not None:
-                all_hotel_rooms_lowest_price[hotel] = price
+            for future in as_completed(future_to_hotel):
+                hotel, price = future.result()
+                if price is not None:
+                    all_hotel_rooms_lowest_price[hotel] = price
 
-    # 调用接口上传数据
-    tools.update_hotel_data(all_hotel_rooms_lowest_price, "万豪")
+        # 调用接口上传数据
+        tools.update_hotel_data(all_hotel_rooms_lowest_price, "万豪")
 
-    logger.info(f"结束执行 万豪 最低房价任务")
-    return all_hotel_rooms_lowest_price
+        logger.info(f"结束执行 万豪 最低房价任务")
+        return all_hotel_rooms_lowest_price
+    finally:
+        signal.alarm(0)
 
 
 if __name__ == '__main__':

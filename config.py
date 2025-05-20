@@ -11,6 +11,8 @@ class Settings(BaseSettings):
     # 数据库接口地址
     DATABASE_URL: str = "http://craneman.cn/api/hotel/data/loadPrice"
 
+    DATE_DURATION: int = 90
+
     # User-Agent 配置
     USER_AGENTS: List[str] = [
         "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36",

@@ -14,6 +14,10 @@ logger = get_logger("tool")
 def update_hotel_data(hotel_data_dict, hotel_type):
     url = settings.DATABASE_URL
 
+    if not hotel_data_dict:
+        logger.warning(f"上传{hotel_type} 数据为空")
+        return
+
     retry_num = 0
     for hotel_name, hotel_data in hotel_data_dict.items():
         while retry_num < 3:
@@ -33,12 +37,12 @@ def update_hotel_data(hotel_data_dict, hotel_type):
             logger.error(f"三次上传{hotel_type} {hotel_name} 数据均失败")
 
 
-def get_date_list(date_duration: int = 60):
+def get_date_list():
     """获取日期"""
     date_list = []
     timezone = pytz.timezone("Asia/Shanghai")
     now = datetime.now(tz=timezone)
-    for i in range(date_duration):
+    for i in range(settings.DATE_DURATION):
         start_date = (now + timedelta(days=i)).strftime("%Y-%m-%d")
         end_date = (now + timedelta(days=i + 1)).strftime("%Y-%m-%d")
         date_list.append(

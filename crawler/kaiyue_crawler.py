@@ -17,6 +17,12 @@ class KYCrawler:
         self.cookie = f"tkrm_alpekz_s1.3={x_kpsdk_ct}"
         self.set_cookie = ""
 
+    def get_new_cookie(self):
+        """单独调一次接口，获取凯悦的Cookie"""
+        date_duration = tools.get_date_list()
+        date = date_duration[0]
+        self.refresh_cookie(date)
+
     def refresh_cookie(self, response_headers):
         x_kpsdk_ct = response_headers.get("X-Kpsdk-Ct")
         set_cookie = response_headers.get("Set-Cookie")
@@ -49,7 +55,7 @@ class KYCrawler:
         while retry_num < 3:
             try:
                 r = requests.get(url, params=params, headers=headers)
-                logger.debug(f"调用凯悦 {self.hotel_id} 房间信息接口结果: {r.status_code}")
+                logger.info(f"调用凯悦 {self.hotel_id} 房间信息接口结果: {r.status_code}")
                 r.raise_for_status()
                 room_info = r.json()["roomRates"]
                 self.refresh_cookie(r.headers)
@@ -72,7 +78,7 @@ class KYCrawler:
                 room_rate = room_plan["rate"]
                 room_lowest_price = room_rate if room_rate <= room_lowest_price or room_lowest_price == 0 else room_lowest_price
             all_room_lowest_price[room_name] = room_lowest_price
-        logger.debug(f"凯悦 {self.hotel_id} {date} 最低房价获取成功")
+        logger.info(f"凯悦 {self.hotel_id} {date} 最低房价获取成功")
         return all_room_lowest_price
 
     def batch_room_lowest_room_price(self):
@@ -88,4 +94,20 @@ class KYCrawler:
                 }
             )
 
+        return all_room_lowest_price
+
+    def batch_lowest_room_price_temporary(self):
+        """凯悦酒店不并发的临时方案，每次接口调用完后暂停1分钟"""
+        date_duration = tools.get_date_list()
+        all_room_lowest_price = []
+        for date in date_duration:
+            room_info = self.get_room_info(date)
+            room_lowest_price = self.get_lowest_room_price(room_info, date)
+            all_room_lowest_price.append(
+                {
+                    "date": date,
+                    "lowest_price": room_lowest_price,
+                }
+            )
+            time.sleep(60)
         return all_room_lowest_price

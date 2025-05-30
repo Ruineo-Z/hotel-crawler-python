@@ -47,17 +47,29 @@ class KYCrawler:
 
         headers = {
             "Cookie": self.cookie,
-            "User-Agent": random.choice(settings.USER_AGENTS),
-            "Priority": "u=1, i",
-            "Accept-language": "zh-CN,zh;q=0.9",
+            # "User-Agent": random.choice(settings.USER_AGENTS),
+            'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
+            'accept': '*/*',
+            'accept-language': 'zh-CN,zh;q=0.9',
+            'cache-control': 'no-cache',
+            'pragma': 'no-cache',
+            'priority': 'u=1, i',
+            'sec-ch-ua': '"Chromium";v="136", "Google Chrome";v="136", "Not.A/Brand";v="99"',
+            'sec-ch-ua-mobile': '?0',
+            'sec-ch-ua-platform': '"macOS"',
+            'sec-fetch-dest': 'empty',
+            'sec-fetch-mode': 'cors',
+            'sec-fetch-site': 'same-origin',
         }
         retry_num = 0
         while retry_num < 3:
             try:
                 r = requests.get(url, params=params, headers=headers)
                 logger.info(f"调用凯悦 {self.hotel_id} 房间信息接口结果: {r.status_code}")
+                logger.info(r.text)
                 r.raise_for_status()
                 room_info = r.json()["roomRates"]
+                logger.info(f"更新cookie， cookie: {self.cookie}")
                 self.refresh_cookie(r.headers)
                 return room_info
             except Exception as e:

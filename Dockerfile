@@ -1,25 +1,30 @@
-# 使用官方 Python 运行环境（带常用构建工具）
+# 优化后的Dockerfile
 FROM python:3.12-slim
 
-# 安装系统依赖（Playwright 运行所需）
+# 安装Chrome和依赖
 RUN apt-get update && \
-    apt-get install -y wget gnupg curl ca-certificates fonts-liberation libasound2 \
-    libatk-bridge2.0-0 libatk1.0-0 libcups2 libdbus-1-3 libgdk-pixbuf2.0-0 \
-    libnspr4 libnss3 libxcomposite1 libxdamage1 libxrandr2 xdg-utils \
+    apt-get install -y wget gnupg curl ca-certificates && \
+    wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - && \
+    echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" >> /etc/apt/sources.list.d/google-chrome.list && \
+    apt-get update && \
+    apt-get install -y google-chrome-stable && \
+    apt-get install -y fonts-liberation libasound2 libatk-bridge2.0-0 \
+    libatk1.0-0 libcups2 libdbus-1-3 libgdk-pixbuf2.0-0 libnspr4 \
+    libnss3 libxcomposite1 libxdamage1 libxrandr2 xdg-utils \
     libu2f-udev libvulkan1 libxss1 libgtk-3-0 && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
-# 设置工作目录
-WORKDIR /app
+# 设置显示环境变量（用于无头模式）
+ENV DISPLAY=:99
+ENV CHROME_BIN=/usr/bin/google-chrome
+ENV CHROME_PATH=/usr/bin/google-chrome
 
-# 拷贝项目文件
+WORKDIR /app
 COPY . .
 
-# 安装依赖
 RUN pip install --upgrade pip && \
     pip install -r requirements.txt && \
     pip install playwright && \
     playwright install --with-deps
 
-# 运行主程序
 CMD ["python3", "main.py"]

@@ -1,55 +1,75 @@
-# hotel-crawler-python
+# 凯悦酒店Cookie提取工具
 
-这是一个基于 [APScheduler](https://apscheduler.readthedocs.io/) 与 [Playwright](https://playwright.dev/python/)
-实现的定时爬虫项目，用于每日定时爬取指定酒店页面中的房型及价格信息，并写入数据库。
+这个工具用于从凯悦酒店网站提取cookie信息，使用Chrome DevTools Protocol (CDP)通过pyppeteer库实现，避免被网站的反爬机制检测到。
 
-## 功能特性
+## 功能特点
 
-- ⏰ 每天早上 8:00 定时自动执行爬取任务
-- 🌐 使用 Playwright 处理页面渲染
-- 📅 使用 APScheduler 作为任务调度器
-- 🏨 可配置多家酒店目标链接
-- 🛠 数据结果结构标准，方便后续存储与分析
+- 使用CDP协议控制Chrome浏览器，比WebDriver更难被检测
+- 隐藏浏览器自动化特征，模拟真实用户行为
+- 提取所有cookie，包括由JavaScript设置的和标记为HttpOnly的cookie
+- 将cookie按不同方式分类保存到JSON文件中
+- 适用于Linux服务器环境
 
----
+## 安装方法
 
-## 项目结构
+### 在Linux服务器上安装
+
+1. 克隆或下载此项目到服务器
+2. 赋予安装脚本执行权限：
+   ```
+   chmod +x setup.sh
+   ```
+3. 以root权限运行安装脚本：
+   ```
+   sudo ./setup.sh
+   ```
+
+### 手动安装
+
+1. 确保已安装Python 3和pip
+2. 安装所需依赖：
+   ```
+   pip install -r requirements.txt
+   ```
+3. 如果在Linux环境下，需要安装Chromium/Chrome相关依赖：
+   ```
+   sudo apt-get install -y fonts-liberation libasound2 libatk-bridge2.0-0 libatk1.0-0 libatspi2.0-0 libcups2 libdbus-1-3 libdrm2 libgbm1 libgtk-3-0 libnspr4 libnss3 libpango-1.0-0 libxcomposite1 libxdamage1 libxfixes3 libxkbcommon0 libxrandr2 xdg-utils libu2f-udev libvulkan1
+   ```
+
+## 使用方法
+
+运行以下命令启动程序：
 
 ```
-├── schedule.py # 任务调度主脚本，定义定时任务与酒店列表
-├── hotel_crawler.py # 核心爬虫逻辑及数据库接口定义
-├── requirements.txt # 依赖库
-├── logger.py # 日志配置
-├── run.sh # 项目启动脚本
-└── README.md # 项目说明文件
+python3 test.py
 ```
 
----
+程序会：
+1. 启动无头Chrome浏览器（隐藏自动化特征）
+2. 访问凯悦酒店网站并等待页面完全加载
+3. 提取所有cookie信息，包括HttpOnly标记的cookie
+4. 将cookie保存到三个不同文件中：
+   - `cookies.json`: 所有cookie
+   - `httponly_cookies.json`: 只包含HttpOnly的cookie
+   - `cookies_by_domain.json`: 按域名分类的cookie
 
-## 使用方式
+## 工作原理
 
-```bash
-chmod +x run.sh
-./run.sh
-```
+本工具使用pyppeteer库（Python版的Puppeteer），通过Chrome DevTools Protocol (CDP)控制Chrome浏览器。与传统WebDriver方法相比，CDP：
 
-## 参数配置
+1. 更难被网站检测到
+2. 可以更完整地模拟真实用户行为
+3. 可以访问所有cookie，包括由JavaScript设置的
+4. 避免了许多反爬虫检测机制
 
-* 在 schedule.py 中设置目标页面列表`HOTEL_LIST`
-* 在 hotel_crawler.py 中的 HotelCrawler 类定义数据库地址`database_url`
+此外，代码还实现了多种反检测措施：
+- 修改WebDriver特征
+- 随机生成浏览器插件信息
+- 修改权限查询行为
+- 使用真实的用户代理信息
 
-## 爬取数据结构示例
+## 注意事项
 
-```json
-[
-  {"room_name": "经典客房, 客房, 2 张单人床, 城市景观", "room_lowest_price": 588},
-  {"room_name": "豪华客房, 客房, 2 张单人床, 双塔景观", "room_lowest_price": 630},
-  {"room_name": "高级客房, 客房, 1 张特大床", "room_lowest_price": 672},
-  {"room_name": "行政豪华客房, 行政酒廊礼遇, 客房, 2 张单人床", "room_lowest_price": 672},
-  {"room_name": "豪华客房, 客房, 1 张特大床, 双塔景观", "room_lowest_price": 714},
-  {"room_name": "主题亲子房, 客房, 2 张单人床", "room_lowest_price": 739},
-  {"room_name": "行政豪华客房, 行政酒廊礼遇, 客房, 1 张特大床", "room_lowest_price": 756},
-  {"room_name": "主题亲子房, 客房, 1 张特大床", "room_lowest_price": 835},
-  {"room_name": "副总统套房, 行政酒廊礼遇, 套房, 1 张特大床, 城市景观", "room_lowest_price": 3429}
-]
-```
+- 此工具仅用于教育和研究目的
+- 请遵守网站的使用条款和政策
+- 频繁使用可能导致您的IP地址被网站封禁

@@ -1,7 +1,13 @@
-import random
+import os
 import time
+import webbrowser
+import subprocess
+import shutil
 
+import sqlite3
+import psutil
 import requests
+import browser_cookie3
 
 import tools
 from config import settings
@@ -11,24 +17,98 @@ logger = get_logger("kaiyue-crawler")
 
 
 class KYCrawler:
-    def __init__(self, hotel_id: str, x_kpsdk_ct: str):
+    def __init__(self, hotel_id: str):
         self.hotel_base_url = "https://www.hyatt.com/zh-CN/shop/service/rooms/roomrates"
         self.hotel_id = hotel_id
-        self.cookie = f"tkrm_alpekz_s1.3={x_kpsdk_ct}"
-        self.set_cookie = ""
+        self.cookie = ""
 
-    def get_new_cookie(self):
-        """单独调一次接口，获取凯悦的Cookie"""
-        date_duration = tools.get_date_list()
-        date = date_duration[0]
-        self.refresh_cookie(date)
+    def get_cookie(self):
+        """
+        通过webbrowser获取cookie
+        1. 获取cookie
+        2. 关闭系统中chrome的进程
+        3. 删除chrome中凯悦的cookie
+        """
 
-    def refresh_cookie(self, response_headers):
-        x_kpsdk_ct = response_headers.get("X-Kpsdk-Ct")
-        set_cookie = response_headers.get("Set-Cookie")
-        self.set_cookie = set_cookie
-        cookie = f"tkrm_alpekz_s1.3={x_kpsdk_ct}; "
-        self.cookie = cookie
+        def close_chrome():
+            """关闭Chrome浏览器进程"""
+            try:
+                # macOS系统
+                subprocess.run(['pkill', '-f', 'Google Chrome'], check=False)
+
+                # 或者使用psutil更精确地控制
+                for proc in psutil.process_iter(['pid', 'name']):
+                    if 'chrome' in proc.info['name'].lower():
+                        proc.kill()
+
+                logger.info("Chrome浏览器已关闭")
+            except Exception as e:
+                logger.error(f"关闭Chrome失败: {e}")
+
+        def delete_hyatt_cookies():
+            """删除Chrome中Hyatt网站的所有cookie"""
+            # Chrome cookie数据库路径
+            db_path = os.path.join(
+                os.path.expanduser("~"),
+                "Library/Application Support/Google/Chrome/Default/Cookies"
+            )
+
+            # 复制数据库文件（避免锁定问题）
+            temp_db = "temp_cookies.db"
+            shutil.copyfile(db_path, temp_db)
+
+            try:
+                # 连接数据库
+                conn = sqlite3.connect(temp_db)
+                cursor = conn.cursor()
+
+                # 删除Hyatt相关的cookie
+                cursor.execute(
+                    "DELETE FROM cookies WHERE host_key LIKE '%hyatt.com%'"
+                )
+
+                conn.commit()
+                conn.close()
+
+                # 将修改后的数据库复制回原位置
+                shutil.copyfile(temp_db, db_path)
+                os.remove(temp_db)
+
+                logger.info("Hyatt网站cookie已删除")
+
+            except Exception as e:
+                logger.error(f"删除cookie失败: {e}")
+
+        def get_hyatt_cookie_via_browser():
+            """通过webbrowser打开Chrome并获取cookie"""
+            # 使用webbrowser打开Chrome访问Hyatt网站
+            url = 'https://www.hyatt.com/zh-CN/home'
+            webbrowser.open(url)
+            time.sleep(5)
+
+            # 从Chrome中读取cookie
+            try:
+                cj = browser_cookie3.chrome(domain_name='hyatt.com')
+                for cookie in cj:
+                    if cookie.name == 'tkrm_alpekz_s1.3':
+                        return cookie.value
+            except Exception as e:
+                logger.info(f"获取cookie失败: {e}")
+
+            return None
+
+        retry_num = 0
+        while retry_num < 3:
+            cookie = get_hyatt_cookie_via_browser()
+            close_chrome()
+            delete_hyatt_cookies()
+            if not cookie:
+                retry_num += 1
+            self.cookie = cookie
+            break
+        if retry_num == 3:
+            logger.error(f"3次获取凯悦的cookie均失败")
+        logger.info(f"获取凯悦的cookie, Cookie: {self.cookie}")
 
     def get_room_info(self, date):
         url = f"{self.hotel_base_url}/{self.hotel_id}"
@@ -47,7 +127,7 @@ class KYCrawler:
 
         headers = {
             "Cookie": self.cookie,
-            # "User-Agent": random.choice(settings.USER_AGENTS),
+            # user agent必须使用与chrome一致的版本(cookie的加密应该是使用了user agent)
             'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36',
             'accept': '*/*',
             'accept-language': 'zh-CN,zh;q=0.9',
@@ -66,11 +146,14 @@ class KYCrawler:
             try:
                 r = requests.get(url, params=params, headers=headers)
                 logger.info(f"调用凯悦 {self.hotel_id} 房间信息接口结果: {r.status_code}")
-                logger.info(r.text)
                 r.raise_for_status()
+                if not r.text:
+                    retry_num += 1
+                    logger.info(f"查询 {self.hotel_id} - {date} 的房价无响应,重新获取cookie")
+                    self.get_cookie()
+                    continue
+
                 room_info = r.json()["roomRates"]
-                logger.info(f"更新cookie， cookie: {self.cookie}")
-                self.refresh_cookie(r.headers)
                 return room_info
             except Exception as e:
                 logger.warning(
@@ -106,20 +189,4 @@ class KYCrawler:
                 }
             )
 
-        return all_room_lowest_price
-
-    def batch_lowest_room_price_temporary(self):
-        """凯悦酒店不并发的临时方案，每次接口调用完后暂停1分钟"""
-        date_duration = tools.get_date_list()
-        all_room_lowest_price = []
-        for date in date_duration:
-            room_info = self.get_room_info(date)
-            room_lowest_price = self.get_lowest_room_price(room_info, date)
-            all_room_lowest_price.append(
-                {
-                    "date": date,
-                    "lowest_price": room_lowest_price,
-                }
-            )
-            time.sleep(60)
         return all_room_lowest_price

@@ -11,8 +11,7 @@ logger = get_logger("kaiyue-task")
 
 
 def fetch_lowest_price(hotel_id):
-    init_cookie = os.getenv("KAIYUE_COOKIE")
-    client = KYCrawler(hotel_id=hotel_id, x_kpsdk_ct=init_cookie)
+    client = KYCrawler(hotel_id=hotel_id)
 
     try:
         hotel_room_lowest_price = client.batch_room_lowest_room_price()
@@ -58,9 +57,9 @@ def kaiyue_temporary_task():
         logger.info(f"Hotel ID: {hotel_id}")
         all_hotel_room_lowest_price = {}
 
-        init_cookie = os.getenv("KAIYUE_COOKIE")
-        client = KYCrawler(hotel_id=hotel_id, x_kpsdk_ct=init_cookie)
-        data = client.batch_lowest_room_price_temporary()
+        client = KYCrawler(hotel_id=hotel_id)
+        client.get_cookie()
+        data = client.batch_room_lowest_room_price()
         cookie = client.cookie
         if cookie:
             tools.update_env_value("KAIYUE_COOKIE", cookie)
@@ -77,19 +76,6 @@ def kaiyue_temporary_task_with_timeout():
     except TimeoutError:
         logger.error("凯悦定时任务执行超时（超过8.5小时）")
         raise TimeoutError("凯悦定时任务超时")
-
-
-def update_kaiyue_cookie():
-    """定时刷新凯悦Cookie"""
-    logger.info("开始刷新凯悦的Cookie")
-    cookie = os.getenv("KAIYUE_COOKIE", "")
-    hotel_id = settings.KY_HOTEL_LIST[0]
-    client = KYCrawler(hotel_id=hotel_id, x_kpsdk_ct=cookie)
-    client.get_new_cookie()
-    new_cookie = client.cookie
-    logger.info(f"凯悦Cookie，刷新前: {cookie}, 刷新后: {new_cookie}")
-    tools.update_env_value("KAIYUE_COOKIE", new_cookie)
-    logger.info(f"更新凯悦Cookie成功")
 
 
 if __name__ == "__main__":

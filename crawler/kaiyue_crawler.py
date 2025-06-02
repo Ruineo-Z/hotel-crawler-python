@@ -190,3 +190,8 @@ class KYCrawler:
             )
 
         return all_room_lowest_price
+
+
+if __name__ == '__main__':
+    client = KYCrawler("")
+    client.get_cookie()

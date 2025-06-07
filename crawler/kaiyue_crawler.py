@@ -17,10 +17,11 @@ logger = get_logger("kaiyue-crawler")
 
 
 class KYCrawler:
-    def __init__(self, hotel_id: str):
+    def __init__(self, hotel_id: str, cookie: str = "", user_agent: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36"):
         self.hotel_base_url = "https://www.hyatt.com/zh-CN/shop/service/rooms/roomrates"
         self.hotel_id = hotel_id
-        self.cookie = ""
+        self.cookie = {"tkrm_alpekz_s1.3": cookie}
+        self.user_agent = user_agent
 
     def get_cookie(self):
         """
@@ -110,10 +111,10 @@ class KYCrawler:
             try:
                 # 检测是否在Docker环境中运行
                 in_docker = os.path.exists('/.dockerenv')
-                
+
                 # 使用webbrowser打开Chrome访问Hyatt网站
                 url = 'https://www.hyatt.com/zh-CN/home'
-                
+
                 # if in_docker:
                 #     # 在Docker环境中，使用环境变量方式直接返回cookie
                 #     # 如果环境变量中有cookie，直接使用
@@ -121,7 +122,7 @@ class KYCrawler:
                 #     if env_cookie:
                 #         logger.info("从环境变量获取cookie")
                 #         return env_cookie
-                    
+
                 #     logger.info("Docker环境中无法打开浏览器，尝试使用requests直接获取")
                 #     try:
                 #         # 使用requests直接访问网站获取cookie
@@ -132,12 +133,12 @@ class KYCrawler:
                 #         }
                 #         session = requests.Session()
                 #         response = session.get(url, headers=headers)
-                        
+
                 #         # 检查是否获取到特定cookie
                 #         for cookie in session.cookies:
                 #             if cookie.name == 'tkrm_alpekz_s1.3':
                 #                 return cookie.value
-                        
+
                 #         logger.warning("未能通过requests获取到所需cookie")
                 #     except Exception as e:
                 #         logger.warning(f"通过requests获取cookie失败: {e}")
@@ -146,7 +147,7 @@ class KYCrawler:
                 #     webbrowser.open(url)
                 webbrowser.open(url)
                 time.sleep(5)
-                
+
                 # 从Chrome中读取cookie
                 try:
                     cj = browser_cookie3.chrome(domain_name='hyatt.com')
@@ -155,7 +156,7 @@ class KYCrawler:
                             return cookie.value
                 except Exception as e:
                     logger.info(f"获取cookie失败: {e}")
-                
+
                 return None
             except Exception as e:
                 logger.error(f"获取cookie过程中出错: {e}")
@@ -190,25 +191,15 @@ class KYCrawler:
         }
 
         headers = {
-            "Cookie": self.cookie,
-            # user agent必须使用与chrome一致的版本(cookie的加密应该是使用了user agent)
-            "user-agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/136.0.0.0 Safari/537.36",
+            # "Cookie": self.cookie,
+            "user-agent": self.user_agent,
             "accept": "*/*",
             "accept-language": "zh-CN,zh;q=0.9",
-            "cache-control": "no-cache",
-            "pragma": "no-cache",
-            "priority": "u=1, i",
-            "sec-ch-ua": '"Chromium";v="136", "Google Chrome";v="136", "Not.A/Brand";v="99"',
-            "sec-ch-ua-mobile": "?0",
-            "sec-ch-ua-platform": '"macOS"',
-            "sec-fetch-dest": "empty",
-            "sec-fetch-mode": "cors",
-            "sec-fetch-site": "same-origin",
         }
         retry_num = 0
         while retry_num < 3:
             try:
-                r = requests.get(url, params=params, headers=headers)
+                r = requests.get(url, params=params, headers=headers, cookies=self.cookie)
                 logger.info(
                     f"调用凯悦 {self.hotel_id} 房间信息接口结果: {r.status_code}"
                 )
@@ -218,7 +209,7 @@ class KYCrawler:
                     logger.info(
                         f"查询 {self.hotel_id} - {date} 的房价无响应,重新获取cookie"
                     )
-                    self.get_cookie()
+                    # self.get_cookie()
                     continue
 
                 room_info = r.json()["roomRates"]
@@ -236,6 +227,7 @@ class KYCrawler:
         for room_id, room_info in all_room_info.items():
             room_lowest_price = 0
             room_name = room_info["roomType"]["title"]
+            all_room_lowest_price.setdefault(room_name, {})
             room_plans = room_info["ratePlans"]
 
             for room_plan in room_plans:
@@ -245,14 +237,14 @@ class KYCrawler:
                     if room_rate <= room_lowest_price or room_lowest_price == 0
                     else room_lowest_price
                 )
-            all_room_lowest_price[room_name] = room_lowest_price
+            all_room_lowest_price[room_name]["price"] = room_lowest_price
         logger.info(f"凯悦 {self.hotel_id} {date} 最低房价获取成功")
         return all_room_lowest_price
 
-    def batch_room_lowest_room_price(self):
-        date_duration = tools.get_date_list()
+    def batch_room_lowest_room_price(self, date_duration: settings.DATE_DURATION):
+        date_list = tools.get_date_list(date_duration)
         all_room_lowest_price = []
-        for date in date_duration:
+        for date in date_list:
             room_info = self.get_room_info(date)
             room_lowest_price = self.get_lowest_room_price(room_info, date)
             all_room_lowest_price.append(
@@ -265,6 +257,6 @@ class KYCrawler:
         return all_room_lowest_price
 
 
-if __name__ == "__main__":
-    client = KYCrawler("")
+if __name__ == '__main__':
+    client = KYCrawler(hotel_id="ctuub")
     client.get_cookie()

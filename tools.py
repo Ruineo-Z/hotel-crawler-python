@@ -37,12 +37,12 @@ def update_hotel_data(hotel_data_dict, hotel_type):
             logger.error(f"三次上传{hotel_type} {hotel_name} 数据均失败")
 
 
-def get_date_list():
+def get_date_list(date_duration: int=settings.DATE_DURATION):
     """获取日期"""
     date_list = []
     timezone = pytz.timezone("Asia/Shanghai")
     now = datetime.now(tz=timezone)
-    for i in range(settings.DATE_DURATION):
+    for i in range(date_duration):
         start_date = (now + timedelta(days=i)).strftime("%Y-%m-%d")
         end_date = (now + timedelta(days=i + 1)).strftime("%Y-%m-%d")
         date_list.append(

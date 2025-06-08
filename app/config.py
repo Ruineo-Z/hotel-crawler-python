@@ -89,9 +89,16 @@ class Settings(BaseSettings):
     KY_HOTEL_LIST: List[str] = [
         "ctugh",  # 成都群光君悦酒店
         "ctuub",  # 琅珀·凯悦 成都琅珀酒店
-        "ctuzc",  # 成都象南里凯悦嘉轩酒店
-        "ctuxc",  # 成都象南里凯悦嘉寓酒店
         "ctmub",  # 成都木棉花酒店
+
+        "chong",  # 重庆富力凯悦酒店
+
+        "kmggh",  # 昆明君悦酒店
+
+        "syxgh",  # 三亚海棠湾君悦酒店
+        "syxrs"  # 三亚天丽湾凯悦酒店
+        "syxzs",  # 三亚中心凯悦嘉轩酒店
+        "shhgh",  # 神州半岛君悦酒店
     ]
     KAIYUE_COOKIE: str = os.getenv("KAIYUE_COOKIE", "")
 

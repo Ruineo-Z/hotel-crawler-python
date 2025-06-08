@@ -8,3 +8,5 @@ pydantic~=2.11.4
 python-dotenv~=1.1.0
 browser-cookie3~=0.20.1
 psutil~=7.0.0
+uvicorn~=0.34.3
+fastapi~=0.115.12

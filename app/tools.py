@@ -5,8 +5,8 @@ import requests
 import pytz
 from dotenv import load_dotenv
 
-from config import settings
-from logger import get_logger
+from app.config import settings
+from app.logger import get_logger
 
 logger = get_logger("tool")
 

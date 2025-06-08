@@ -9,15 +9,16 @@ import psutil
 import requests
 import browser_cookie3
 
-import tools
-from config import settings
-from logger import get_logger
+from app import tools
+from app.config import settings
+from app.logger import get_logger
 
 logger = get_logger("kaiyue-crawler")
 
 
 class KYCrawler:
-    def __init__(self, hotel_id: str, cookie: str = "", user_agent: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36"):
+    def __init__(self, hotel_id: str, cookie: str = "",
+                 user_agent: str = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/137.0.0.0 Safari/537.36"):
         self.hotel_base_url = "https://www.hyatt.com/zh-CN/shop/service/rooms/roomrates"
         self.hotel_id = hotel_id
         self.cookie = {"tkrm_alpekz_s1.3": cookie}
@@ -226,7 +227,8 @@ class KYCrawler:
         all_room_lowest_price = {}
         for room_id, room_info in all_room_info.items():
             room_lowest_price = 0
-            room_name = room_info["roomType"]["title"]
+            room_name = room_info.get("roomType", {}).get("title", "Untiled") if room_info.get(
+                "roomType") else "Untiled"
             all_room_lowest_price.setdefault(room_name, {})
             room_plans = room_info["ratePlans"]
 

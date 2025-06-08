@@ -2,10 +2,10 @@ import os
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
-from crawler.wanhao_crawler import WHCrawler
-from logger import get_logger
-from config import settings
-import tools
+from app.crawler.wanhao_crawler import WHCrawler
+from app.logger import get_logger
+from app.config import settings
+from app import tools
 
 logger = get_logger("wanhao-tasks")
 
@@ -26,7 +26,6 @@ def fetch_lowest_price(hotel):
     """执行万豪单个酒店的最低房价获取任务"""
     client = WHCrawler()
     client.cookie = os.getenv("WANHAO_COOKIE", "")
-    print(client.cookie)
     try:
         hotel_rooms_lowest_price = client.batch_get_room_price(hotel_property_id=hotel)
         logger.success(f"完成 万豪集团 {hotel} 的最低房价")
@@ -58,7 +57,7 @@ def wanhao_task():
             logger.error(f"万豪任务执行超过25分钟，强制终止, Error: {e}")
         except Exception as e:
             logger.error(f"万豪任务执行异常, Error: {e}")
-        
+
     # 调用接口上传数据
     tools.update_hotel_data(all_hotel_rooms_lowest_price, "万豪")
 

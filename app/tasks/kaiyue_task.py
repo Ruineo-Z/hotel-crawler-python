@@ -1,11 +1,9 @@
-import os
-
 from concurrent.futures import ThreadPoolExecutor, as_completed, TimeoutError
 
-import tools
-from crawler.kaiyue_crawler import KYCrawler
-from config import settings
-from logger import get_logger
+from app import tools
+from app.crawler.kaiyue_crawler import KYCrawler
+from app.config import settings
+from app.logger import get_logger
 
 logger = get_logger("kaiyue-task")
 

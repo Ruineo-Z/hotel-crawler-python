@@ -1,15 +1,13 @@
 import random
 import time
-from datetime import datetime, timedelta
 from typing import List
 
 from playwright.sync_api import sync_playwright
 import requests
-import pytz
 
-import tools
-from logger import get_logger
-from config import settings
+from app import tools
+from app.logger import get_logger
+from app.config import settings
 
 logger = get_logger("wanhao-crawler")
 
